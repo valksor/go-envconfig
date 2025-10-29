@@ -197,7 +197,7 @@ func processStructField(field reflect.StructField, val reflect.Value, prefix str
 // following rules:
 // - Field names are converted to lowercase
 // - Nested structs use dot notation (e.g., "database.host")
-// - mapstructure tags override default field names
+// - Mapstructure tags override default field names
 //
 // Example:
 //

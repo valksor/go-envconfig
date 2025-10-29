@@ -6,6 +6,15 @@ import (
 	"testing"
 )
 
+const (
+	InvalidAlphanumericValue      = "abc@123"
+	EmptyStringTestCase           = "empty string"
+	NonEmptyStringTestCase        = "non-empty string"
+	ValidateStructExpectedError   = "ValidateStruct() expected error but got none"
+	ValidateStructErrorFormat     = "ValidateStruct() error = %v, want to contain %v"
+	ValidateStructUnexpectedError = "ValidateStruct() unexpected error = %v"
+)
+
 func TestValidationErrorError(t *testing.T) {
 	err := ValidationError{
 		Field:   "test_field",
@@ -161,7 +170,7 @@ func TestStructValidatorValidateStruct(t *testing.T) {
 				OptionalField: "",
 				MinField:      "",
 				MaxField:      "",
-				PatternField:  "abc@123",
+				PatternField:  InvalidAlphanumericValue,
 				ComboField:    "",
 			},
 			wantError: true,
@@ -188,15 +197,15 @@ func TestStructValidatorValidateStruct(t *testing.T) {
 
 			if testCase.wantError {
 				if err == nil {
-					t.Error("ValidateStruct() expected error but got none")
+					t.Error(ValidateStructExpectedError)
 					return
 				}
 				if testCase.errorMsg != "" && !strings.Contains(err.Error(), testCase.errorMsg) {
-					t.Errorf("ValidateStruct() error = %v, want to contain %v", err.Error(), testCase.errorMsg)
+					t.Errorf(ValidateStructErrorFormat, err.Error(), testCase.errorMsg)
 				}
 			} else {
 				if err != nil {
-					t.Errorf("ValidateStruct() unexpected error = %v", err)
+					t.Errorf(ValidateStructUnexpectedError, err)
 				}
 			}
 		})
@@ -266,15 +275,15 @@ func TestStructValidatorValidateStructWithNestedStruct(t *testing.T) {
 
 			if testCase.wantError {
 				if err == nil {
-					t.Error("ValidateStruct() expected error but got none")
+					t.Error(ValidateStructExpectedError)
 					return
 				}
 				if testCase.errorMsg != "" && !strings.Contains(err.Error(), testCase.errorMsg) {
-					t.Errorf("ValidateStruct() error = %v, want to contain %v", err.Error(), testCase.errorMsg)
+					t.Errorf(ValidateStructErrorFormat, err.Error(), testCase.errorMsg)
 				}
 			} else {
 				if err != nil {
-					t.Errorf("ValidateStruct() unexpected error = %v", err)
+					t.Errorf(ValidateStructUnexpectedError, err)
 				}
 			}
 		})
@@ -338,15 +347,15 @@ func TestStructValidatorValidateStructWithPointerField(t *testing.T) {
 
 			if testCase.wantError {
 				if err == nil {
-					t.Error("ValidateStruct() expected error but got none")
+					t.Error(ValidateStructExpectedError)
 					return
 				}
 				if testCase.errorMsg != "" && !strings.Contains(err.Error(), testCase.errorMsg) {
-					t.Errorf("ValidateStruct() error = %v, want to contain %v", err.Error(), testCase.errorMsg)
+					t.Errorf(ValidateStructErrorFormat, err.Error(), testCase.errorMsg)
 				}
 			} else {
 				if err != nil {
-					t.Errorf("ValidateStruct() unexpected error = %v", err)
+					t.Errorf(ValidateStructUnexpectedError, err)
 				}
 			}
 		})
@@ -442,12 +451,12 @@ func TestStructValidatorIsEmpty(t *testing.T) {
 		expected bool
 	}{
 		{
-			name:     "empty string",
+			name:     EmptyStringTestCase,
 			value:    reflect.ValueOf(""),
 			expected: true,
 		},
 		{
-			name:     "non-empty string",
+			name:     NonEmptyStringTestCase,
 			value:    reflect.ValueOf("hello"),
 			expected: false,
 		},
@@ -546,7 +555,7 @@ func TestStructValidatorParseInt(t *testing.T) {
 			expected:   10,
 		},
 		{
-			name:       "empty string",
+			name:       EmptyStringTestCase,
 			input:      "",
 			defaultVal: 5,
 			expected:   5,
@@ -586,7 +595,7 @@ func TestStructValidatorMatchesPattern(t *testing.T) {
 		},
 		{
 			name:     "alphanumeric invalid",
-			input:    "abc@123",
+			input:    InvalidAlphanumericValue,
 			pattern:  "alphanumeric",
 			expected: false,
 		},
@@ -638,13 +647,13 @@ func TestStructValidatorIsAlphanumeric(t *testing.T) {
 			expected: true,
 		},
 		{
-			name:     "empty string",
+			name:     EmptyStringTestCase,
 			input:    "",
 			expected: true,
 		},
 		{
 			name:     "with special characters",
-			input:    "abc@123",
+			input:    InvalidAlphanumericValue,
 			expected: false,
 		},
 		{

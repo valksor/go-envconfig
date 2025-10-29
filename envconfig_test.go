@@ -5,6 +5,11 @@ import (
 	"testing"
 )
 
+const (
+	DatabaseHostKey = "database.host"
+	TestHostValue   = "localhost"
+)
+
 func TestReadDotenvBytes(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -107,9 +112,9 @@ func TestMergeEnvMaps(t *testing.T) {
 		{
 			name: "underscore to dot conversion",
 			input: []map[string]string{
-				{"DATABASE_HOST": "localhost", "DATABASE_PORT": "5432"},
+				{"DATABASE_HOST": TestHostValue, "DATABASE_PORT": "5432"},
 			},
-			expected: map[string]string{"database.host": "localhost", "database.port": "5432"},
+			expected: map[string]string{DatabaseHostKey: TestHostValue, "database.port": "5432"},
 		},
 		{
 			name: "empty values are skipped",
@@ -196,7 +201,7 @@ func TestBuildKey(t *testing.T) {
 			name:      "with prefix",
 			fieldName: "host",
 			prefix:    "database",
-			expected:  "database.host",
+			expected:  DatabaseHostKey,
 		},
 		{
 			name:      "nested prefix",
@@ -334,12 +339,12 @@ func TestFillStructFromEnv(t *testing.T) {
 			name: "nested struct",
 			env: map[string]string{
 				"name":          "test_app",
-				"database.host": "localhost",
+				DatabaseHostKey: TestHostValue,
 				"database.port": "5432",
 			},
 			expected: TestStruct{
 				Name:     "test_app",
-				Database: NestedStruct{Host: "localhost", Port: "5432"},
+				Database: NestedStruct{Host: TestHostValue, Port: "5432"},
 				Tags:     nil,
 			},
 		},
