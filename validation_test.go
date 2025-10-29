@@ -15,6 +15,71 @@ const (
 	ValidateStructUnexpectedError = "ValidateStruct() unexpected error = %v"
 )
 
+type BasicTestStruct struct {
+	RequiredField string `required:"true"`
+	OptionalField string
+	MinField      string `min:"3"`
+	MaxField      string `max:"10"`
+	PatternField  string `pattern:"alphanumeric"`
+	ComboField    string `required:"true" min:"2" max:"5"`
+}
+
+type NestedStruct struct {
+	NestedRequired string `required:"true"`
+	NestedOptional string
+}
+
+type NestedTestStruct struct {
+	RequiredField string `required:"true"`
+	Nested        NestedStruct
+}
+
+type PointerNestedStruct struct {
+	NestedRequired string `required:"true"`
+}
+
+type PointerTestStruct struct {
+	RequiredField string `required:"true"`
+	NestedPtr     *PointerNestedStruct
+}
+
+type testCase struct {
+	name      string
+	config    any
+	wantError bool
+	errorMsg  string
+}
+
+type nestedTestCase struct {
+	name      string
+	config    NestedTestStruct
+	wantError bool
+	errorMsg  string
+}
+
+type pointerTestCase struct {
+	name      string
+	config    PointerTestStruct
+	wantError bool
+	errorMsg  string
+}
+
+func assertValidationResult(t *testing.T, err error, wantError bool, errorMsg string) {
+	if wantError {
+		if err == nil {
+			t.Error(ValidateStructExpectedError)
+			return
+		}
+		if errorMsg != "" && !strings.Contains(err.Error(), errorMsg) {
+			t.Errorf(ValidateStructErrorFormat, err.Error(), errorMsg)
+		}
+	} else {
+		if err != nil {
+			t.Errorf(ValidateStructUnexpectedError, err)
+		}
+	}
+}
+
 func TestValidationErrorError(t *testing.T) {
 	err := ValidationError{
 		Field:   "test_field",
@@ -75,24 +140,10 @@ func TestNewValidator(t *testing.T) {
 	var _ Validator = validator
 }
 
-func TestStructValidatorValidateStruct(t *testing.T) {
+func TestStructValidatorValidateStructEdgeCases(t *testing.T) {
 	validator := NewValidator()
 
-	type TestStruct struct {
-		RequiredField string `required:"true"`
-		OptionalField string
-		MinField      string `min:"3"`
-		MaxField      string `max:"10"`
-		PatternField  string `pattern:"alphanumeric"`
-		ComboField    string `required:"true" min:"2" max:"5"`
-	}
-
-	tests := []struct {
-		name      string
-		config    any
-		wantError bool
-		errorMsg  string
-	}{
+	tests := []testCase{
 		{
 			name:      "nil config",
 			config:    nil,
@@ -101,7 +152,7 @@ func TestStructValidatorValidateStruct(t *testing.T) {
 		},
 		{
 			name:      "nil pointer",
-			config:    (*TestStruct)(nil),
+			config:    (*BasicTestStruct)(nil),
 			wantError: true,
 			errorMsg:  "configuration pointer cannot be nil",
 		},
@@ -111,9 +162,23 @@ func TestStructValidatorValidateStruct(t *testing.T) {
 			wantError: true,
 			errorMsg:  "configuration must be a struct",
 		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validator.ValidateStruct(tc.config)
+			assertValidationResult(t, err, tc.wantError, tc.errorMsg)
+		})
+	}
+}
+
+func TestStructValidatorValidateStructBasicValidation(t *testing.T) {
+	validator := NewValidator()
+
+	tests := []testCase{
 		{
 			name: "valid struct",
-			config: &TestStruct{
+			config: &BasicTestStruct{
 				RequiredField: "required",
 				OptionalField: "optional",
 				MinField:      "min",
@@ -126,7 +191,7 @@ func TestStructValidatorValidateStruct(t *testing.T) {
 		},
 		{
 			name: "missing required field",
-			config: &TestStruct{
+			config: &BasicTestStruct{
 				RequiredField: "",
 				OptionalField: "optional",
 				MinField:      "",
@@ -137,9 +202,23 @@ func TestStructValidatorValidateStruct(t *testing.T) {
 			wantError: true,
 			errorMsg:  "requiredfield",
 		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validator.ValidateStruct(tc.config)
+			assertValidationResult(t, err, tc.wantError, tc.errorMsg)
+		})
+	}
+}
+
+func TestStructValidatorValidateStructLengthValidation(t *testing.T) {
+	validator := NewValidator()
+
+	tests := []testCase{
 		{
 			name: "field too short",
-			config: &TestStruct{
+			config: &BasicTestStruct{
 				RequiredField: "required",
 				OptionalField: "",
 				MinField:      "ab",
@@ -152,7 +231,7 @@ func TestStructValidatorValidateStruct(t *testing.T) {
 		},
 		{
 			name: "field too long",
-			config: &TestStruct{
+			config: &BasicTestStruct{
 				RequiredField: "required",
 				OptionalField: "",
 				MinField:      "",
@@ -164,21 +243,8 @@ func TestStructValidatorValidateStruct(t *testing.T) {
 			errorMsg:  "maximum length",
 		},
 		{
-			name: "pattern mismatch",
-			config: &TestStruct{
-				RequiredField: "required",
-				OptionalField: "",
-				MinField:      "",
-				MaxField:      "",
-				PatternField:  InvalidAlphanumericValue,
-				ComboField:    "",
-			},
-			wantError: true,
-			errorMsg:  "does not match required pattern",
-		},
-		{
 			name: "combo field validation",
-			config: &TestStruct{
+			config: &BasicTestStruct{
 				RequiredField: "required",
 				OptionalField: "",
 				MinField:      "",
@@ -191,49 +257,48 @@ func TestStructValidatorValidateStruct(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range tests {
-		t.Run(testCase.name, func(t *testing.T) {
-			err := validator.ValidateStruct(testCase.config)
-
-			if testCase.wantError {
-				if err == nil {
-					t.Error(ValidateStructExpectedError)
-					return
-				}
-				if testCase.errorMsg != "" && !strings.Contains(err.Error(), testCase.errorMsg) {
-					t.Errorf(ValidateStructErrorFormat, err.Error(), testCase.errorMsg)
-				}
-			} else {
-				if err != nil {
-					t.Errorf(ValidateStructUnexpectedError, err)
-				}
-			}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validator.ValidateStruct(tc.config)
+			assertValidationResult(t, err, tc.wantError, tc.errorMsg)
 		})
 	}
 }
 
-func TestStructValidatorValidateStructWithNestedStruct(t *testing.T) {
+func TestStructValidatorValidateStructPatternValidation(t *testing.T) {
 	validator := NewValidator()
 
-	type NestedStruct struct {
-		NestedRequired string `required:"true"`
-		NestedOptional string
+	tests := []testCase{
+		{
+			name: "pattern mismatch",
+			config: &BasicTestStruct{
+				RequiredField: "required",
+				OptionalField: "",
+				MinField:      "",
+				MaxField:      "",
+				PatternField:  InvalidAlphanumericValue,
+				ComboField:    "",
+			},
+			wantError: true,
+			errorMsg:  "does not match required pattern",
+		},
 	}
 
-	type TestStruct struct {
-		RequiredField string `required:"true"`
-		Nested        NestedStruct
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validator.ValidateStruct(tc.config)
+			assertValidationResult(t, err, tc.wantError, tc.errorMsg)
+		})
 	}
+}
 
-	tests := []struct {
-		name      string
-		config    TestStruct
-		wantError bool
-		errorMsg  string
-	}{
+func TestStructValidatorValidateNestedStructValidCases(t *testing.T) {
+	validator := NewValidator()
+
+	tests := []nestedTestCase{
 		{
 			name: "valid nested struct",
-			config: TestStruct{
+			config: NestedTestStruct{
 				RequiredField: "required",
 				Nested: NestedStruct{
 					NestedRequired: "nested_required",
@@ -243,9 +308,23 @@ func TestStructValidatorValidateStructWithNestedStruct(t *testing.T) {
 			wantError: false,
 			errorMsg:  "",
 		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validator.ValidateStruct(&tc.config)
+			assertValidationResult(t, err, tc.wantError, tc.errorMsg)
+		})
+	}
+}
+
+func TestStructValidatorValidateNestedStructErrorCases(t *testing.T) {
+	validator := NewValidator()
+
+	tests := []nestedTestCase{
 		{
 			name: "missing nested required field",
-			config: TestStruct{
+			config: NestedTestStruct{
 				RequiredField: "required",
 				Nested: NestedStruct{
 					NestedRequired: "",
@@ -257,7 +336,7 @@ func TestStructValidatorValidateStructWithNestedStruct(t *testing.T) {
 		},
 		{
 			name: "missing top-level required field",
-			config: TestStruct{
+			config: NestedTestStruct{
 				RequiredField: "",
 				Nested: NestedStruct{
 					NestedRequired: "nested_required",
@@ -269,50 +348,23 @@ func TestStructValidatorValidateStructWithNestedStruct(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range tests {
-		t.Run(testCase.name, func(t *testing.T) {
-			err := validator.ValidateStruct(&testCase.config)
-
-			if testCase.wantError {
-				if err == nil {
-					t.Error(ValidateStructExpectedError)
-					return
-				}
-				if testCase.errorMsg != "" && !strings.Contains(err.Error(), testCase.errorMsg) {
-					t.Errorf(ValidateStructErrorFormat, err.Error(), testCase.errorMsg)
-				}
-			} else {
-				if err != nil {
-					t.Errorf(ValidateStructUnexpectedError, err)
-				}
-			}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validator.ValidateStruct(&tc.config)
+			assertValidationResult(t, err, tc.wantError, tc.errorMsg)
 		})
 	}
 }
 
-func TestStructValidatorValidateStructWithPointerField(t *testing.T) {
+func TestStructValidatorValidatePointerFieldValidCases(t *testing.T) {
 	validator := NewValidator()
 
-	type NestedStruct struct {
-		NestedRequired string `required:"true"`
-	}
-
-	type TestStruct struct {
-		RequiredField string `required:"true"`
-		NestedPtr     *NestedStruct
-	}
-
-	tests := []struct {
-		name      string
-		config    TestStruct
-		wantError bool
-		errorMsg  string
-	}{
+	tests := []pointerTestCase{
 		{
 			name: "valid pointer field",
-			config: TestStruct{
+			config: PointerTestStruct{
 				RequiredField: "required",
-				NestedPtr: &NestedStruct{
+				NestedPtr: &PointerNestedStruct{
 					NestedRequired: "nested_required",
 				},
 			},
@@ -321,18 +373,32 @@ func TestStructValidatorValidateStructWithPointerField(t *testing.T) {
 		},
 		{
 			name: "nil pointer field",
-			config: TestStruct{
+			config: PointerTestStruct{
 				RequiredField: "required",
 				NestedPtr:     nil,
 			},
 			wantError: false,
 			errorMsg:  "",
 		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validator.ValidateStruct(&tc.config)
+			assertValidationResult(t, err, tc.wantError, tc.errorMsg)
+		})
+	}
+}
+
+func TestStructValidatorValidatePointerFieldErrorCases(t *testing.T) {
+	validator := NewValidator()
+
+	tests := []pointerTestCase{
 		{
 			name: "invalid nested field in pointer",
-			config: TestStruct{
+			config: PointerTestStruct{
 				RequiredField: "required",
-				NestedPtr: &NestedStruct{
+				NestedPtr: &PointerNestedStruct{
 					NestedRequired: "",
 				},
 			},
@@ -341,23 +407,10 @@ func TestStructValidatorValidateStructWithPointerField(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range tests {
-		t.Run(testCase.name, func(t *testing.T) {
-			err := validator.ValidateStruct(&testCase.config)
-
-			if testCase.wantError {
-				if err == nil {
-					t.Error(ValidateStructExpectedError)
-					return
-				}
-				if testCase.errorMsg != "" && !strings.Contains(err.Error(), testCase.errorMsg) {
-					t.Errorf(ValidateStructErrorFormat, err.Error(), testCase.errorMsg)
-				}
-			} else {
-				if err != nil {
-					t.Errorf(ValidateStructUnexpectedError, err)
-				}
-			}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validator.ValidateStruct(&tc.config)
+			assertValidationResult(t, err, tc.wantError, tc.errorMsg)
 		})
 	}
 }
