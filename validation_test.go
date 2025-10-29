@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestValidationError_Error(t *testing.T) {
+func TestValidationErrorError(t *testing.T) {
 	err := ValidationError{
 		Field:   "test_field",
 		Message: "test message",
@@ -18,7 +18,7 @@ func TestValidationError_Error(t *testing.T) {
 	}
 }
 
-func TestValidationErrors_Error(t *testing.T) {
+func TestValidationErrorsError(t *testing.T) {
 	tests := []struct {
 		name     string
 		errors   ValidationErrors
@@ -66,7 +66,7 @@ func TestNewValidator(t *testing.T) {
 	var _ Validator = validator
 }
 
-func TestStructValidator_ValidateStruct(t *testing.T) {
+func TestStructValidatorValidateStruct(t *testing.T) {
 	validator := NewValidator()
 
 	type TestStruct struct {
@@ -203,7 +203,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 	}
 }
 
-func TestStructValidator_ValidateStructWithNestedStruct(t *testing.T) {
+func TestStructValidatorValidateStructWithNestedStruct(t *testing.T) {
 	validator := NewValidator()
 
 	type NestedStruct struct {
@@ -281,7 +281,7 @@ func TestStructValidator_ValidateStructWithNestedStruct(t *testing.T) {
 	}
 }
 
-func TestStructValidator_ValidateStructWithPointerField(t *testing.T) {
+func TestStructValidatorValidateStructWithPointerField(t *testing.T) {
 	validator := NewValidator()
 
 	type NestedStruct struct {
@@ -353,7 +353,7 @@ func TestStructValidator_ValidateStructWithPointerField(t *testing.T) {
 	}
 }
 
-func TestStructValidator_getFieldName(t *testing.T) {
+func TestStructValidatorGetFieldName(t *testing.T) {
 	validator := NewValidator()
 
 	tests := []struct {
@@ -398,7 +398,7 @@ func TestStructValidator_getFieldName(t *testing.T) {
 	}
 }
 
-func TestStructValidator_isRequired(t *testing.T) {
+func TestStructValidatorIsRequired(t *testing.T) {
 	validator := NewValidator()
 
 	tests := []struct {
@@ -433,7 +433,7 @@ func TestStructValidator_isRequired(t *testing.T) {
 	}
 }
 
-func TestStructValidator_isEmpty(t *testing.T) {
+func TestStructValidatorIsEmpty(t *testing.T) {
 	validator := NewValidator()
 
 	tests := []struct {
@@ -518,7 +518,7 @@ func TestStructValidator_isEmpty(t *testing.T) {
 	}
 }
 
-func TestStructValidator_parseInt(t *testing.T) {
+func TestStructValidatorParseInt(t *testing.T) {
 	validator := NewValidator()
 
 	tests := []struct {
@@ -569,7 +569,7 @@ func TestStructValidator_parseInt(t *testing.T) {
 	}
 }
 
-func TestStructValidator_matchesPattern(t *testing.T) {
+func TestStructValidatorMatchesPattern(t *testing.T) {
 	validator := NewValidator()
 
 	tests := []struct {
@@ -614,7 +614,7 @@ func TestStructValidator_matchesPattern(t *testing.T) {
 	}
 }
 
-func TestStructValidator_isAlphanumeric(t *testing.T) {
+func TestStructValidatorIsAlphanumeric(t *testing.T) {
 	validator := NewValidator()
 
 	tests := []struct {
@@ -674,7 +674,7 @@ func TestStructValidator_isAlphanumeric(t *testing.T) {
 	}
 }
 
-func TestStructValidator_validateStructWithUnexportedFields(t *testing.T) {
+func TestStructValidatorValidateStructWithUnexportedFields(t *testing.T) {
 	validator := NewValidator()
 
 	type TestStruct struct {
