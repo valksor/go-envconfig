@@ -1,5 +1,7 @@
 # Environment Configuration Package
 
+[![codecov](https://codecov.io/gh/valksor/go-envconfig/graph/badge.svg?token=TR1WE7DOU5)](https://codecov.io/gh/valksor/go-envconfig)
+
 This package provides generic environment variable handling and configuration loading utilities that can be used across different Go projects.
 
 ## Features
