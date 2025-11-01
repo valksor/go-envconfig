@@ -46,8 +46,9 @@ jobs:
       - name: Lint and Tests
         run: make
 
-      - name: Upload coverage to Qlty
-        uses: qltysh/qlty-action/coverage@v2
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
         with:
-          token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
-          files: "coverage.out"
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: valksor/go-envconfig
+          files: ./coverage.out
