@@ -1,6 +1,7 @@
 # Environment Configuration Package
 
-[![codecov](https://codecov.io/gh/valksor/go-envconfig/graph/badge.svg?token=TR1WE7DOU5)](https://codecov.io/gh/valksor/go-envconfig)
+[![BSD-3-Clause](https://img.shields.io/badge/BSD--3--Clause-green?style=flat)](https://github.com/valksor/php-bundle/blob/master/LICENSE) 
+[![Coverage Status](https://coveralls.io/repos/github/valksor/go-envconfig/badge.svg?branch=master)](https://coveralls.io/github/valksor/go-envconfig?branch=master)
 
 This package provides generic environment variable handling and configuration loading utilities that can be used across different Go projects.
 
